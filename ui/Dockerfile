@@ -1,0 +1,4 @@
+ARG UI_IMAGE
+FROM ${UI_IMAGE}
+
+WORKDIR /app

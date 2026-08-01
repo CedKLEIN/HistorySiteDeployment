@@ -1,0 +1,55 @@
+services:
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+      args:
+        UI_IMAGE: ${UI_IMAGE}
+    container_name: historysite-ui
+    restart: unless-stopped
+    ports:
+      - "${UI_PORT:-8080}:80"
+    depends_on:
+      - api
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://api:8080}
+    networks:
+      - internal_net
+
+  init-api:
+    image: alpine:3.21
+    container_name: historysite-init
+    restart: "no"
+    command: sh -c "mkdir -p /data && chmod 777 /data"
+    volumes:
+      - historydata:/data
+    networks:
+      - internal_net
+
+  api:
+    depends_on:
+      init-api:
+        condition: service_completed_successfully
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      args:
+        API_IMAGE: ${API_IMAGE}
+    container_name: historysite-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__HistoryDb: Data Source=/data/history.db
+      SiteConfiguration__Email__Password: "${SMTP_PASSWORD}"
+      SiteConfiguration__AdminEmails__0: "${ADMIN_EMAIL:-cedaout@hotmail.fr}"
+    volumes:
+      - historydata:/data
+    networks:
+      - internal_net
+
+networks:
+  internal_net:
+    driver: bridge
+
+volumes:
+  historydata:
