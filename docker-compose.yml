@@ -8,7 +8,7 @@ services:
     container_name: historysite-ui
     restart: unless-stopped
     ports:
-      - "${UI_PORT:-8080}:80"
+      - "127.0.0.1:${UI_PORT:-8080}:80"
     depends_on:
       - api
     environment:
