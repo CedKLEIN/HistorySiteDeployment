@@ -20,14 +20,14 @@ Copier `.env.example` vers `.env` puis renseigner **toutes** les variables :
 | `API_IMAGE` | `cedkl/history-site-api:latest` | Image du backend (ou version figée `vX.Y.Z`) |
 | `UI_PORT` | `8080` | Port exposé du frontend (http://IP:8080) |
 | `BACKEND_URL` | `http://api:8080` | URL interne vers l'API (`api` = nom du service compose, réseau interne) |
-| `SMTP_PASSWORD` | *mot de passe d'application Outlook* | **Obligatoire** pour l'envoi des messages de contact. Se crée ici : https://account.microsoft.com/security (vérification en deux étapes requise). Variable d'env `SiteConfiguration__Email__Password` du backend. |
-| `ADMIN_EMAIL` | `souverainsdefrance@outlook.fr` | Email(s) admin qui reçoivent les messages de contact (`SiteConfiguration__AdminEmails__0`) **et** email du compte admin créé au démarrage (`SiteConfiguration__AdminSeed__Email`) |
+| `SMTP_PASSWORD` | *Gmail app password* | **Obligatoire** pour l'envoi des messages de contact. Se crée ici : https://myaccount.google.com/apppasswords (vérification en deux étapes requise). Variable d'env `SiteConfiguration__Email__Password` du backend. |
+| `ADMIN_EMAIL` | `souverainsdefrance1214@gmail.com` | Email(s) admin qui reçoivent les messages de contact (`SiteConfiguration__AdminEmails__0`) **et** email du compte admin créé au démarrage (`SiteConfiguration__AdminSeed__Email`) |
 | `JWT_SECRET` | *chaîne longue et aléatoire* | **Obligatoire.** Clé de signature des jetons JWT (`SiteConfiguration__Jwt__Token`). Sans elle, le backend utilise une clé de développement insuffisante en production. |
 | `ADMIN_PASSWORD` | *mot de passe fort* | **Obligatoire si vous voulez le compte admin.** Si vide, **aucun** compte admin n'est créé en production (`SiteConfiguration__AdminSeed__Password`). |
 | `JWT_ISSUER` | `HistorySiteBackend` | Issuer des jetons (optionnel, ne pas changer si rien n'est modifié du côté frontend) |
 | `JWT_AUDIENCE` | `HistorySiteFrontend` | Audience des jetons (optionnel, idem) |
 
-> Le mot de passe Outlook et `JWT_SECRET` **ne doivent jamais** être commités : `.env` est dans `.gitignore`.
+> Gmail app password et `JWT_SECRET` **ne doivent jamais** être commités : `.env` est dans `.gitignore`.
 
 ---
 
@@ -36,16 +36,16 @@ Copier `.env.example` vers `.env` puis renseigner **toutes** les variables :
 Au minimum, dans le fichier `.env` :
 
 ```ini
-SMTP_PASSWORD=abcd efgh ijkl mnop    # envoi des messages de contact (mot de passe d'application Outlook)
+SMTP_PASSWORD=abcd efgh ijkl mnop    # envoi des messages de contact (Gmail app password)
 JWT_SECRET=<au moins 64 caractères aléatoires>   # signe les jetons de connexion (sinon l'API refuse les comptes)
 ADMIN_PASSWORD=<mot de passe fort>   # crée le compte administrateur au premier démarrage
-ADMIN_EMAIL=souverainsdefrance@outlook.fr       # email de ce compte admin (+ destinataire des messages de contact)
+ADMIN_EMAIL=souverainsdefrance1214@gmail.com       # email de ce compte admin (+ destinataire des messages de contact)
 ```
 
 Si `ADMIN_PASSWORD` est laissé vide, **aucun** compte admin n'est créé : les visiteurs
 peuvent toujours s'inscrire (rôle utilisateur), mais personne n'aura le rôle administrateur.
 
-> En développement local, le compte admin **`souverainsdefrance@outlook.fr` / `HistoryAdminDev1!`** est
+> En développement local, le compte admin **`souverainsdefrance1214@gmail.com` / `HistoryAdminDev1!`** est
 > créé automatiquement (voir `appsettings.Development.json`). Ce comportement n'existe qu'en dev.
 
 Exemple de `.env` production :
@@ -56,7 +56,7 @@ API_IMAGE=cedkl/history-site-api:v0.0.2
 UI_PORT=8080
 BACKEND_URL=http://api:8080
 SMTP_PASSWORD=abcd efgh ijkl mnop
-ADMIN_EMAIL=souverainsdefrance@outlook.fr
+ADMIN_EMAIL=souverainsdefrance1214@gmail.com
 JWT_SECRET=uneLongueChaineAleatoireDePlusDe64CaracteresPourSignerLesJetons
 ADMIN_PASSWORD=MonMotDePasseAdminFort1!
 ```
