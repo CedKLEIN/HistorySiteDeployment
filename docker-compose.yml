@@ -41,6 +41,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__HistoryDb: Data Source=/data/history.db
       SiteConfiguration__Email__Password: "${SMTP_PASSWORD}"
+      SiteConfiguration__FrontendBaseUrl: "${FRONTEND_URL:-https://roisempereurs.fr}"
       SiteConfiguration__AdminEmails__0: "${ADMIN_EMAIL:-souverainsdefrance1214@gmail.com}"
       SiteConfiguration__Jwt__Token: "${JWT_SECRET}"
       SiteConfiguration__Jwt__Issuer: "${JWT_ISSUER:-HistorySiteBackend}"

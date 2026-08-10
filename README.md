@@ -20,6 +20,7 @@ Copier `.env.example` vers `.env` puis renseigner **toutes** les variables :
 | `API_IMAGE` | `cedkl/history-site-api:latest` | Image du backend (ou version figée `vX.Y.Z`) |
 | `UI_PORT` | `8080` | Port exposé du frontend (http://IP:8080) |
 | `BACKEND_URL` | `http://api:8080` | URL interne vers l'API (`api` = nom du service compose, réseau interne) |
+| `FRONTEND_URL` | `https://roisempereurs.fr` | URL publique du site, utilisée pour construire les liens de réinitialisation de mot de passe envoyés par e-mail (`SiteConfiguration__FrontendBaseUrl`). En local : `http://localhost:8080`. |
 | `SMTP_PASSWORD` | *Gmail app password* | **Obligatoire** pour l'envoi des messages de contact. Se crée ici : https://myaccount.google.com/apppasswords (vérification en deux étapes requise). Variable d'env `SiteConfiguration__Email__Password` du backend. |
 | `ADMIN_EMAIL` | `souverainsdefrance1214@gmail.com` | Email(s) admin qui reçoivent les messages de contact (`SiteConfiguration__AdminEmails__0`) **et** email du compte admin créé au démarrage (`SiteConfiguration__AdminSeed__Email`) |
 | `JWT_SECRET` | *chaîne longue et aléatoire* | **Obligatoire.** Clé de signature des jetons JWT (`SiteConfiguration__Jwt__Token`). Sans elle, le backend utilise une clé de développement insuffisante en production. |
