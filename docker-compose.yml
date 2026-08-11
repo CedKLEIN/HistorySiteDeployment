@@ -13,6 +13,7 @@ services:
       - api
     environment:
       BACKEND_URL: ${BACKEND_URL:-http://api:8080}
+      VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
     networks:
       - internal_net
 

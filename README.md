@@ -20,6 +20,7 @@ Copier `.env.example` vers `.env` puis renseigner **toutes** les variables :
 | `API_IMAGE` | `cedkl/history-site-api:latest` | Image du backend (ou version figée `vX.Y.Z`) |
 | `UI_PORT` | `8080` | Port exposé du frontend (http://IP:8080) |
 | `BACKEND_URL` | `http://api:8080` | URL interne vers l'API (`api` = nom du service compose, réseau interne) |
+| `VITE_SENTRY_DSN` | *vide* | DSN Sentry du monitoring erreurs frontend (optionnel, vide = désactivé). Injecté dans `index.html` au démarrage du conteneur `ui`. |
 | `FRONTEND_URL` | `https://roisempereurs.fr` | URL publique du site, utilisée pour construire les liens de réinitialisation de mot de passe envoyés par e-mail (`SiteConfiguration__FrontendBaseUrl`). En local : `http://localhost:8080`. |
 | `SMTP_PASSWORD` | *Gmail app password* | **Obligatoire** pour l'envoi des messages de contact. Se crée ici : https://myaccount.google.com/apppasswords (vérification en deux étapes requise). Variable d'env `SiteConfiguration__Email__Password` du backend. |
 | `ADMIN_EMAIL` | `souverainsdefrance1214@gmail.com` | Email(s) admin qui reçoivent les messages de contact (`SiteConfiguration__AdminEmails__0`) **et** email du compte admin créé au démarrage (`SiteConfiguration__AdminSeed__Email`) |
@@ -42,16 +43,17 @@ Le frontend remonte ses erreurs JS vers Sentry (gratuit jusqu'à ~5 000 erreurs/
 2. Créer un projet de type **Vite/React**.
 3. Copier le **DSN** (Settings → Projects → `<projet>` → Client Keys (DSN)) : `https://xxxx@sentry.io/1234567`.
 
-### 2. Intégrer le DSN à l'image frontend
+### 2. Configurer le DSN
 
-Le DSN est injecté **au build de l'image `cedkl/history-site-ui`** (dans la CI de
-HistorySiteFrontend), pas au moment du déploiement. La CI doit donc construire avec :
+Le DSN se renseigne dans `.env` du serveur (variable `VITE_SENTRY_DSN`) :
 
-```bash
-docker build --build-arg VITE_SENTRY_DSN=https://xxxx@sentry.io/1234567 -t cedkl/history-site-ui:latest .
+```ini
+VITE_SENTRY_DSN=https://xxxx@sentry.io/1234567
 ```
 
-Sans `VITE_SENTRY_DSN`, Sentry est simplement désactivé (aucun impact sur le build).
+Il est injecté dans `index.html` au démarrage du conteneur `ui` par un script nginx.
+Un simple `docker compose up -d --build` suffit. Vide ou absent = Sentry désactivé
+(le DSN est public, pas de secret).
 
 ### 3. Recevoir les alertes par email
 
