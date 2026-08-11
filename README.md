@@ -32,6 +32,47 @@ Copier `.env.example` vers `.env` puis renseigner **toutes** les variables :
 
 ---
 
+## Monitoring des erreurs (Sentry)
+
+Le frontend remonte ses erreurs JS vers Sentry (gratuit jusqu'à ~5 000 erreurs/mois).
+
+### 1. Créer le projet Sentry
+
+1. Créer un compte sur https://sentry.io (le plan gratuit suffit).
+2. Créer un projet de type **Vite/React**.
+3. Copier le **DSN** (Settings → Projects → `<projet>` → Client Keys (DSN)) : `https://xxxx@sentry.io/1234567`.
+
+### 2. Intégrer le DSN à l'image frontend
+
+Le DSN est injecté **au build de l'image `cedkl/history-site-ui`** (dans la CI de
+HistorySiteFrontend), pas au moment du déploiement. La CI doit donc construire avec :
+
+```bash
+docker build --build-arg VITE_SENTRY_DSN=https://xxxx@sentry.io/1234567 -t cedkl/history-site-ui:latest .
+```
+
+Sans `VITE_SENTRY_DSN`, Sentry est simplement désactivé (aucun impact sur le build).
+
+### 3. Recevoir les alertes par email
+
+1. Dashboard Sentry : **Alerts → Create Alert** → condition *« An issue is created »* →
+   action **« Send an email »** aux membres du projet.
+2. Vérifier l'email du compte dans **Account → Email Addresses** : l'email doit être
+   **confirmé**, sinon les alertes ne partent pas.
+
+### 4. Health check de l'API
+
+L'API expose `GET /healthz` (JSON : statut global + check de la base SQLite) :
+
+```bash
+curl http://localhost:8080/healthz
+# {"status":"Healthy","checks":[{"name":"database","status":"Healthy",...}]}
+```
+
+En production, les logs de l'API sont émis en **JSON structuré** (`docker compose logs api`).
+
+---
+
 ## Ce qu'il faut configurer en production
 
 Au minimum, dans le fichier `.env` :
