@@ -20,9 +20,10 @@ services:
     image: alpine:3.21
     container_name: historysite-init
     restart: "no"
-    command: sh -c "mkdir -p /data && chmod 777 /data"
+    command: sh -c "mkdir -p /data /backup && chmod 777 /data /backup"
     volumes:
       - historydata:/data
+      - ./backups:/backup
     networks:
       - internal_net
 
@@ -48,8 +49,13 @@ services:
       SiteConfiguration__Jwt__Audience: "${JWT_AUDIENCE:-HistorySiteFrontend}"
       SiteConfiguration__AdminSeed__Email: "${ADMIN_EMAIL:-souverainsdefrance1214@gmail.com}"
       SiteConfiguration__AdminSeed__Password: "${ADMIN_PASSWORD}"
+      SiteConfiguration__Backup__Enabled: "true"
+      SiteConfiguration__Backup__Directory: "/backup"
+      SiteConfiguration__Backup__RetentionCount: "14"
+      SiteConfiguration__Backup__Hour: "3"
     volumes:
       - historydata:/data
+      - ./backups:/backup
     networks:
       - internal_net
 

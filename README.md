@@ -177,11 +177,47 @@ sudo certbot renew --dry-run
 ## Base de données
 
 La base SQLite vit dans le volume nommé `historydata` (`/data/history.db` dans le conteneur `api`).
-L'API la crée et la remplit automatiquement au premier démarrage. Sauvegarde :
+L'API la crée et la remplit automatiquement au premier démarrage.
+
+### Sauvegarde automatique
+
+L'API sauvegarde automatiquement `history.db` chaque jour à **03:00 UTC** (configurable via
+`SiteConfiguration__Backup__Hour`) en utilisant l'API de backup en ligne de SQLite : le snapshot
+est cohérent même si la base est en cours d'écriture (mode WAL géré).
+
+- Fichiers : `./backups/history-YYYYMMDD-HHmmss.db` (bind mount hôte `/backup` dans le conteneur).
+- Rétention : les **14** derniers backups sont conservés (`SiteConfiguration__Backup__RetentionCount`).
+- Le dossier `./backups` est créé et rendu inscriptible par `init-api` au démarrage.
+- Les backups **survivent** à `docker compose down -v` (le bind mount hôte n'est pas un volume Docker).
+
+Désactivation/ajustement : passer `SiteConfiguration__Backup__Enabled=false` ou changer les valeurs
+dans `docker-compose.yml`.
+
+Vérifier le bon fonctionnement :
 
 ```bash
-docker run --rm -v historysitedeployment_historydata:/data -v "$PWD":/backup alpine tar czf /backup/historydata.tar.gz -C /data .
+ls -la backups/          # doit contenir history-*.db
+docker compose logs api | grep -i backup
 ```
+
+### Restauration
+
+```bash
+# 1. Arrêter l'API (les écritures doivent être stoppées)
+docker compose stop api
+
+# 2. Copier un backup vers la base (remplace l'existant + ses fichiers WAL)
+docker run --rm -v historysitedeployment_historydata:/data -v "$PWD/backups":/backup \
+  alpine sh -c "rm -f /data/history.db-wal /data/history.db-shm && cp /backup/history-20260101-030000.db /data/history.db"
+
+# 3. Redémarrer l'API
+docker compose start api
+```
+
+> Backup manuel ponctuel (équivalent de l'ancienne commande) :
+> ```bash
+> docker run --rm -v historysitedeployment_historydata:/data -v "$PWD":/backup alpine tar czf /backup/historydata.tar.gz -C /data .
+> ```
 
 ---
 
