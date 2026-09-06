@@ -16,20 +16,48 @@ Copier `.env.example` vers `.env` puis renseigner **toutes** les variables :
 
 | Variable | Valeur production | Description |
 |---|---|---|
-| `UI_IMAGE` | `cedkl/history-site-ui:latest` | Image du frontend (ou version figée `vX.Y.Z`) |
-| `API_IMAGE` | `cedkl/history-site-api:latest` | Image du backend (ou version figée `vX.Y.Z`) |
-| `UI_PORT` | `8080` | Port exposé du frontend (http://IP:8080) |
+| `HISTORY_UI_IMAGE` | `cedkl/history-site-ui:latest` | Image du frontend (ou version figée `vX.Y.Z`) |
+| `HISTORY_API_IMAGE` | `cedkl/history-site-api:latest` | Image du backend (ou version figée `vX.Y.Z`) |
+| `HISTORY_UI_PORT` | `8080` | Port exposé du frontend (http://IP:8080) |
 | `BACKEND_URL` | `http://api:8080` | URL interne vers l'API (`api` = nom du service compose, réseau interne) |
 | `VITE_SENTRY_DSN` | *vide* | DSN Sentry du monitoring erreurs frontend (optionnel, vide = désactivé). Injecté dans `index.html` au démarrage du conteneur `ui`. |
 | `FRONTEND_URL` | `https://roisempereurs.fr` | URL publique du site, utilisée pour construire les liens de réinitialisation de mot de passe envoyés par e-mail (`SiteConfiguration__FrontendBaseUrl`). En local : `http://localhost:8080`. |
-| `SMTP_PASSWORD` | *Gmail app password* | **Obligatoire** pour l'envoi des messages de contact. Se crée ici : https://myaccount.google.com/apppasswords (vérification en deux étapes requise). Variable d'env `SiteConfiguration__Email__Password` du backend. |
-| `ADMIN_EMAIL` | `souverainsdefrance1214@gmail.com` | Email(s) admin qui reçoivent les messages de contact (`SiteConfiguration__AdminEmails__0`) **et** email du compte admin créé au démarrage (`SiteConfiguration__AdminSeed__Email`) |
-| `JWT_SECRET` | *chaîne longue et aléatoire* | **Obligatoire.** Clé de signature des jetons JWT (`SiteConfiguration__Jwt__Token`). Sans elle, le backend utilise une clé de développement insuffisante en production. |
-| `ADMIN_PASSWORD` | *mot de passe fort* | **Obligatoire si vous voulez le compte admin.** Si vide, **aucun** compte admin n'est créé en production (`SiteConfiguration__AdminSeed__Password`). |
-| `JWT_ISSUER` | `HistorySiteBackend` | Issuer des jetons (optionnel, ne pas changer si rien n'est modifié du côté frontend) |
-| `JWT_AUDIENCE` | `HistorySiteFrontend` | Audience des jetons (optionnel, idem) |
+| `HISTORY_SMTP_PASSWORD` | *Gmail app password* | **Obligatoire** pour l'envoi des messages de contact. Se crée ici : https://myaccount.google.com/apppasswords (vérification en deux étapes requise). Variable d'env `SiteConfiguration__Email__Password` du backend. |
+| `HISTORY_ADMIN_EMAIL` | `souverainsdefrance1214@gmail.com` | Email(s) admin qui reçoivent les messages de contact (`SiteConfiguration__AdminEmails__0`) **et** email du compte admin créé au démarrage (`SiteConfiguration__AdminSeed__Email`) |
+| `HISTORY_JWT_SECRET` | *chaîne longue et aléatoire* | **Obligatoire.** Clé de signature des jetons JWT (`SiteConfiguration__Jwt__Token`). Sans elle, le backend utilise une clé de développement insuffisante en production. |
+| `HISTORY_ADMIN_PASSWORD` | *mot de passe fort* | **Obligatoire si vous voulez le compte admin.** Si vide, **aucun** compte admin n'est créé en production (`SiteConfiguration__AdminSeed__Password`). |
+| `HISTORY_JWT_ISSUER` | `HistorySiteBackend` | Issuer des jetons (optionnel, ne pas changer si rien n'est modifié du côté frontend) |
+| `HISTORY_JWT_AUDIENCE` | `HistorySiteFrontend` | Audience des jetons (optionnel, idem) |
 
-> Gmail app password et `JWT_SECRET` **ne doivent jamais** être commités : `.env` est dans `.gitignore`.
+> Gmail app password et `HISTORY_JWT_SECRET` **ne doivent jamais** être commités : `.env` est dans `.gitignore`.
+
+### Préfixe `HISTORY_`
+
+Les variables propres à ce déploiement sont préfixées `HISTORY_`. Le même VPS héberge
+`SportSiteDeployment` (denivio.fr), dont les variables sont préfixées `DENIVIO_` : sans
+préfixe, les deux `.env` partageaient neuf noms identiques (`UI_IMAGE`, `API_IMAGE`,
+`UI_PORT`, `JWT_SECRET`, `JWT_ISSUER`, `JWT_AUDIENCE`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`,
+`SMTP_PASSWORD`).
+
+Docker Compose donne la priorité aux variables **du shell** sur celles du fichier `.env`.
+Un `set -a; . ./.env; set +a` lancé depuis un déploiement exporte donc ses valeurs dans le
+shell, et le `docker compose` suivant, lancé depuis l'autre déploiement, les utilise à la
+place des siennes — sans aucun message. Le 06/09/2026, historysite a ainsi été construit à
+partir des images `cedkl/denivio-*` et a tenté de se lier au port 8081.
+
+Deux règles en découlent :
+
+- Toute nouvelle variable de ce dépôt prend le préfixe `HISTORY_`.
+- Ne jamais sourcer un `.env` dans le shell interactif. Utiliser un sous-shell, dont les
+  exports disparaissent avec lui : `( set -a; . ./.env; set +a; <commande> )`.
+
+> **Mise à jour d'un VPS déjà déployé.** Le `.env` du serveur n'est pas versionné : il faut
+> le renommer à la main **avant** de relancer Compose, sinon les variables sont vues comme
+> vides (sans `HISTORY_JWT_SECRET`, l'API refuse de démarrer en production).
+>
+> ```bash
+> sed -i -E 's/^(UI_IMAGE|API_IMAGE|UI_PORT|JWT_SECRET|JWT_ISSUER|JWT_AUDIENCE|ADMIN_EMAIL|ADMIN_PASSWORD|SMTP_PASSWORD)=/HISTORY_\1=/' .env
+> ```
 
 ---
 
@@ -80,13 +108,13 @@ En production, les logs de l'API sont émis en **JSON structuré** (`docker comp
 Au minimum, dans le fichier `.env` :
 
 ```ini
-SMTP_PASSWORD=abcd efgh ijkl mnop    # envoi des messages de contact (Gmail app password)
-JWT_SECRET=<au moins 64 caractères aléatoires>   # signe les jetons de connexion (sinon l'API refuse les comptes)
-ADMIN_PASSWORD=<mot de passe fort>   # crée le compte administrateur au premier démarrage
-ADMIN_EMAIL=souverainsdefrance1214@gmail.com       # email de ce compte admin (+ destinataire des messages de contact)
+HISTORY_SMTP_PASSWORD=abcd efgh ijkl mnop    # envoi des messages de contact (Gmail app password)
+HISTORY_JWT_SECRET=<au moins 64 caractères aléatoires>   # signe les jetons de connexion (sinon l'API refuse les comptes)
+HISTORY_ADMIN_PASSWORD=<mot de passe fort>   # crée le compte administrateur au premier démarrage
+HISTORY_ADMIN_EMAIL=souverainsdefrance1214@gmail.com       # email de ce compte admin (+ destinataire des messages de contact)
 ```
 
-Si `ADMIN_PASSWORD` est laissé vide, **aucun** compte admin n'est créé : les visiteurs
+Si `HISTORY_ADMIN_PASSWORD` est laissé vide, **aucun** compte admin n'est créé : les visiteurs
 peuvent toujours s'inscrire (rôle utilisateur), mais personne n'aura le rôle administrateur.
 
 > En développement local, le compte admin **`souverainsdefrance1214@gmail.com` / `HistoryAdminDev1!`** est
@@ -95,14 +123,14 @@ peuvent toujours s'inscrire (rôle utilisateur), mais personne n'aura le rôle a
 Exemple de `.env` production :
 
 ```ini
-UI_IMAGE=cedkl/history-site-ui:v0.0.2
-API_IMAGE=cedkl/history-site-api:v0.0.2
-UI_PORT=8080
+HISTORY_UI_IMAGE=cedkl/history-site-ui:v0.0.2
+HISTORY_API_IMAGE=cedkl/history-site-api:v0.0.2
+HISTORY_UI_PORT=8080
 BACKEND_URL=http://api:8080
-SMTP_PASSWORD=abcd efgh ijkl mnop
-ADMIN_EMAIL=souverainsdefrance1214@gmail.com
-JWT_SECRET=uneLongueChaineAleatoireDePlusDe64CaracteresPourSignerLesJetons
-ADMIN_PASSWORD=MonMotDePasseAdminFort1!
+HISTORY_SMTP_PASSWORD=abcd efgh ijkl mnop
+HISTORY_ADMIN_EMAIL=souverainsdefrance1214@gmail.com
+HISTORY_JWT_SECRET=uneLongueChaineAleatoireDePlusDe64CaracteresPourSignerLesJetons
+HISTORY_ADMIN_PASSWORD=MonMotDePasseAdminFort1!
 ```
 
 ---
@@ -282,7 +310,7 @@ docker compose up -d --build
 
 ## ERROR 2: le conteneur api ne démarre pas (SMTP)
 
-L'API démarre même sans `SMTP_PASSWORD`, mais les messages de contact ne seront pas envoyés
+L'API démarre même sans `HISTORY_SMTP_PASSWORD`, mais les messages de contact ne seront pas envoyés
 (un warning est logué). Vérifier dans les logs :
 
 ```bash

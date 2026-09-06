@@ -4,11 +4,11 @@ services:
       context: ./ui
       dockerfile: Dockerfile
       args:
-        UI_IMAGE: ${UI_IMAGE}
+        UI_IMAGE: ${HISTORY_UI_IMAGE}
     container_name: historysite-ui
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${UI_PORT:-8080}:80"
+      - "127.0.0.1:${HISTORY_UI_PORT:-8080}:80"
     depends_on:
       - api
     environment:
@@ -36,20 +36,20 @@ services:
       context: ./api
       dockerfile: Dockerfile
       args:
-        API_IMAGE: ${API_IMAGE}
+        API_IMAGE: ${HISTORY_API_IMAGE}
     container_name: historysite-api
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__HistoryDb: Data Source=/data/history.db
-      SiteConfiguration__Email__Password: "${SMTP_PASSWORD}"
+      SiteConfiguration__Email__Password: "${HISTORY_SMTP_PASSWORD}"
       SiteConfiguration__FrontendBaseUrl: "${FRONTEND_URL:-https://roisempereurs.fr}"
-      SiteConfiguration__AdminEmails__0: "${ADMIN_EMAIL:-souverainsdefrance1214@gmail.com}"
-      SiteConfiguration__Jwt__Token: "${JWT_SECRET}"
-      SiteConfiguration__Jwt__Issuer: "${JWT_ISSUER:-HistorySiteBackend}"
-      SiteConfiguration__Jwt__Audience: "${JWT_AUDIENCE:-HistorySiteFrontend}"
-      SiteConfiguration__AdminSeed__Email: "${ADMIN_EMAIL:-souverainsdefrance1214@gmail.com}"
-      SiteConfiguration__AdminSeed__Password: "${ADMIN_PASSWORD}"
+      SiteConfiguration__AdminEmails__0: "${HISTORY_ADMIN_EMAIL:-souverainsdefrance1214@gmail.com}"
+      SiteConfiguration__Jwt__Token: "${HISTORY_JWT_SECRET}"
+      SiteConfiguration__Jwt__Issuer: "${HISTORY_JWT_ISSUER:-HistorySiteBackend}"
+      SiteConfiguration__Jwt__Audience: "${HISTORY_JWT_AUDIENCE:-HistorySiteFrontend}"
+      SiteConfiguration__AdminSeed__Email: "${HISTORY_ADMIN_EMAIL:-souverainsdefrance1214@gmail.com}"
+      SiteConfiguration__AdminSeed__Password: "${HISTORY_ADMIN_PASSWORD}"
       SiteConfiguration__Backup__Enabled: "true"
       SiteConfiguration__Backup__Directory: "/backup"
       SiteConfiguration__Backup__RetentionCount: "14"
