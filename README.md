@@ -28,6 +28,10 @@ Copier `.env.example` vers `.env` puis renseigner **toutes** les variables :
 | `HISTORY_ADMIN_PASSWORD` | *mot de passe fort* | **Obligatoire si vous voulez le compte admin.** Si vide, **aucun** compte admin n'est créé en production (`SiteConfiguration__AdminSeed__Password`). |
 | `HISTORY_JWT_ISSUER` | `HistorySiteBackend` | Issuer des jetons (optionnel, ne pas changer si rien n'est modifié du côté frontend) |
 | `HISTORY_JWT_AUDIENCE` | `HistorySiteFrontend` | Audience des jetons (optionnel, idem) |
+| `HISTORY_BLUESKY_ENABLED` | `false` | Souverain du jour sur Bluesky (voir « Réseaux sociaux » plus bas). |
+| `HISTORY_BLUESKY_HANDLE` | *vide* | Compte Bluesky du site, ex. `roisempereurs.bsky.social`. |
+| `HISTORY_BLUESKY_APP_PASSWORD` | *mot de passe d'application* | Créé dans Bluesky (Réglages > Confidentialité et sécurité > Mots de passe d'application). Jamais le mot de passe du compte. |
+| `HISTORY_PINTEREST_ENABLED` | `false` | Sert et alimente le flux `/api/social/pinterest.rss` que Pinterest publie seul. |
 
 > Gmail app password et `HISTORY_JWT_SECRET` **ne doivent jamais** être commités : `.env` est dans `.gitignore`.
 
@@ -58,6 +62,27 @@ Deux règles en découlent :
 > ```bash
 > sed -i -E 's/^(UI_IMAGE|API_IMAGE|UI_PORT|JWT_SECRET|JWT_ISSUER|JWT_AUDIENCE|ADMIN_EMAIL|ADMIN_PASSWORD|SMTP_PASSWORD)=/HISTORY_\1=/' .env
 > ```
+
+---
+
+## Réseaux sociaux (souverain du jour)
+
+L'API publie seule, sans intervention ni coût : chaque jour à **9 h (Paris)**, une fiche sur
+Bluesky et deux fiches ajoutées au flux RSS que Pinterest lit ; le **vendredi**, une époque
+(dynastie ou régime) en plus, jusqu'à épuisement. Une fiche ne passe qu'une fois par réseau ; une
+publication manquée (API arrêtée, Bluesky injoignable) est retentée toutes les heures du même jour.
+Les images (1000 × 1500, JPEG) sont dessinées par l'API : portrait du domaine public vérifié fichier
+par fichier, sinon composition typographique.
+
+- Image d'une fiche : `https://roisempereurs.fr/api/rulers/<slug>/image.jpg`
+- Image d'une époque : `https://roisempereurs.fr/api/eras/<slug>/image.jpg`
+- Flux Pinterest : `https://roisempereurs.fr/api/social/pinterest.rss` (404 tant que Pinterest est coupé)
+
+Vérifier après activation :
+
+```bash
+docker compose logs api | grep -i "souverain du jour\|époque de la semaine"
+```
 
 ---
 

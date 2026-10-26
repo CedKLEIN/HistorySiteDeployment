@@ -54,6 +54,13 @@ services:
       SiteConfiguration__Backup__Directory: "/backup"
       SiteConfiguration__Backup__RetentionCount: "14"
       SiteConfiguration__Backup__Hour: "3"
+      # Souverain du jour (Bluesky, Pinterest) : coupé tant que les variables ne valent pas true.
+      SiteConfiguration__Social__Bluesky__Enabled: "${HISTORY_BLUESKY_ENABLED:-false}"
+      SiteConfiguration__Social__Bluesky__Handle: "${HISTORY_BLUESKY_HANDLE:-}"
+      SiteConfiguration__Social__Bluesky__AppPassword: "${HISTORY_BLUESKY_APP_PASSWORD:-}"
+      SiteConfiguration__Social__Pinterest__Enabled: "${HISTORY_PINTEREST_ENABLED:-false}"
+      # Les portraits sont lus sur le conteneur ui, par le réseau interne.
+      SiteConfiguration__Social__PortraitBaseUrl: "http://ui"
     volumes:
       - historydata:/data
       - ./backups:/backup
